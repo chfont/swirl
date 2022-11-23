@@ -108,31 +108,32 @@ def construct_typed_ast(ast):
 
 def extract_vars(tree):
     vars = set()
-    if isinstance(tree, QuantifiedExpr):
-        vars.add(tree.bound_var.var_name)
-        return vars.union(extract_vars(tree.expression))
-    elif isinstance(tree, Eq):
-        return vars.union(extract_vars(tree.left)).union(extract_vars(tree.right))
-    elif isinstance(tree, In):
-        return vars.union(extract_vars(tree.left)).union(extract_vars(tree.right))
-    elif isinstance(tree, Lt):
-        return vars.union(extract_vars(tree.left)).union(extract_vars(tree.right))
-    elif isinstance(tree, Negate):
-        return vars.union(extract_vars(tree.sub_term))
-    elif isinstance(tree, Zero):
-        return vars 
-    elif isinstance(tree, FVar):
-        vars.add(tree.var_name)
-        return vars 
-    elif isinstance(tree, SVar):
-        vars.add(tree.var_name)
-        return vars
-    elif isinstance(tree, Or):
-        return extract_vars(tree.left).union(extract_vars(tree.right))
-    elif isinstance(tree, And):
-        return extract_vars(tree.left).union(extract_vars(tree.right))
-    elif isinstance(tree, Successor):
-        return vars.union(extract_vars(tree.sub_term))
+    match tree:
+        case QuantifiedExpr():
+            vars.add(tree.bound_var.var_name)
+            return vars.union(extract_vars(tree.expression))
+        case Eq(left=left, right=right):
+            return vars.union(extract_vars(left)).union(extract_vars(right))
+        case In(left=left, right=right):
+            return vars.union(extract_vars(left)).union(extract_vars(right))
+        case Lt(left=left,right=right):
+            return vars.union(extract_vars(left)).union(extract_vars(right))
+        case Negate(sub_term=sub):
+            return vars.union(extract_vars(sub))
+        case Zero():
+            return vars
+        case FVar(var_name=name):
+            vars.add(name)
+            return vars
+        case SVar(var_name=name):
+            vars.add(name)
+            return vars
+        case Or(left=left,right=right):
+            return extract_vars(left).union(extract_vars(right))
+        case And(left=left,right=right):
+            return extract_vars(left).union(extract_vars(right))
+        case Successor(sub_term=sub):
+            return vars.union(extract_vars(sub))
 def canonicalize(tree):
     if isinstance(tree, Eq):
         if(isinstance(tree.left, Successor) and isinstance(tree.right,Successor)):

@@ -34,7 +34,8 @@ class TestAtomicPropositions(unittest.TestCase):
         self.assertTrue(is_sat("x<y"))
     def test_x_lt_sy(self):
         self.assertTrue(is_sat("x<Sy"))
-
+    def test_zero_gt_szero(self):
+        self.assertFalse(is_sat("0>S0"))
     def test_x_in_s(self):
         self.assertTrue(is_sat("x in X"))
 
@@ -43,5 +44,32 @@ class TestConnectives(unittest.TestCase):
         self.assertTrue(is_sat("x!=y"))
     def test_x_neq_eq_y(self):
         self.assertFalse(is_sat("x=y & x!=y"))
+    def test_x_eq_y_impl_x_neq_y(self):
+        self.assertTrue(is_sat("x = y -> x != y"))
+
+class TestBound(unittest.TestCase):
+    def test_bound_exist(self):
+        tree = grammar.s1s_parse("exists x.x=y")
+        bound = [x for x in grammar.extract_vars(tree) if automaton.is_bound(x,tree)]
+        self.assertTrue('x' in bound)
+        self.assertFalse('y' in bound)
+    def test_bind_type_exist(self):
+        tree = grammar.s1s_parse("exists x.x=y")
+        self.assertTrue(automaton.get_bind_type('x', tree) == 'exists')
+    def test_bound_all(self):
+        tree = grammar.s1s_parse("forall x.x=y")
+        bound = [x for x in grammar.extract_vars(tree) if automaton.is_bound(x,tree)]
+        self.assertTrue('x' in bound)
+        self.assertFalse('y' in bound)
+    def test_bind_type_forall(self):
+        tree = grammar.s1s_parse("forall x.x=y")
+        self.assertTrue(automaton.get_bind_type('x', tree) == 'forall')
+
+class TestVarExtraction(unittest.TestCase):
+    def test_extract_vars(self):
+        tree = grammar.s1s_parse("forall S. exists y. forall x. x in S -> y <= x")
+        expected = ['S', 'y','x']
+        for v in expected:
+            self.assertTrue(v in grammar.extract_vars(tree))
 if __name__ == "__main__":
     unittest.main()

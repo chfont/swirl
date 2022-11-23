@@ -298,26 +298,36 @@ def ast_to_automaton(canonical_tree):
 
 
 def get_bind_type(var, expr): # assume var is bound, is it universal or existential?
-    if isinstance(expr, QuantifiedExpr):
-        if expr.bound_var.var_name == var:
-            return expr.quantifier
-        return get_bind_type(var, expr.expression)
-    elif isinstance(expr, Negate):
-        return get_bind_type(var, expr.sub_term)
-    elif isinstance(expr, And) | isinstance(expr, Or):
-        return get_bind_type(var, expr.left) | get_bind_type(var, expr.right)    
-    return None
+    match expr:
+        case QuantifiedExpr():
+            if expr.bound_var.var_name == var:
+                return expr.quantifier
+            else: 
+                return get_bind_type(var, expr.expression)
+        case Negate(sub_term=sub):
+            return get_bind_type(var, sub)
+        case And(left=left,right=right):
+            return get_bind_type(var, left) | get_bind_type(var, right)
+        case Or(left=left,right=right):
+            return get_bind_type(var, left) | get_bind_type(var, right)
+        case _: 
+            return None
 
 def is_bound(var, expr):
-    if isinstance(expr, QuantifiedExpr):
-        if expr.bound_var.var_name == var:
-            return True 
-        return is_bound(var, expr.expression)
-    elif isinstance(expr, Negate):
-        return is_bound(var, expr.sub_term)
-    elif isinstance(expr, And) | isinstance(expr, Or):
-        return is_bound(var, expr.left) | is_bound(var, expr.right)    
-    return False
+    match expr:
+        case QuantifiedExpr():
+            if expr.bound_var.var_name == var:
+                return True
+            else:
+                return is_bound(var, expr.expression)
+        case Negate(sub_term=sub):
+            return is_bound(var,sub)
+        case And(left=left,right=right):
+            return is_bound(var,left) | is_bound(var, right)
+        case Or(left=left,right=right):
+            return is_bound(var,left) | is_bound(var, right)
+        case e:
+            return False
 
 def project_if_bound(bound_vars, bdd, var_map, bind_types):
     res = bdd 
