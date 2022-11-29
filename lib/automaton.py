@@ -296,7 +296,6 @@ def ast_to_automaton(canonical_tree):
     bind_types = dict([(x, get_bind_type(x, canonical_tree)) for x in bound_vars])
     return construct_automaton(canonical_tree, vars,bound_vars,bind_types,base=True)
 
-
 def get_bind_type(var, expr): # assume var is bound, is it universal or existential?
     match expr:
         case QuantifiedExpr():
@@ -307,9 +306,17 @@ def get_bind_type(var, expr): # assume var is bound, is it universal or existent
         case Negate(sub_term=sub):
             return get_bind_type(var, sub)
         case And(left=left,right=right):
-            return get_bind_type(var, left) | get_bind_type(var, right)
+            v = get_bind_type(var, left) 
+            if v is None: 
+                return get_bind_type(var, right)
+            else: 
+                return v
         case Or(left=left,right=right):
-            return get_bind_type(var, left) | get_bind_type(var, right)
+            v = get_bind_type(var, left) 
+            if v is None: 
+                return get_bind_type(var, right)
+            else: 
+                return v
         case _: 
             return None
 
