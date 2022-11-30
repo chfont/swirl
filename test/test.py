@@ -63,7 +63,7 @@ class TestBound(unittest.TestCase):
         self.assertFalse('y' in bound)
     def test_bind_type_forall(self):
         tree = grammar.s1s_parse("forall x.x=y")
-        self.assertTrue(automaton.get_bind_type('x', tree) == 'forall')
+        self.assertTrue(automaton.get_bind_type('x', tree) == 'exists') #Canonicalized
 
 class TestVarExtraction(unittest.TestCase):
     def test_extract_vars(self):

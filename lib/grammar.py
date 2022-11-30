@@ -1,5 +1,5 @@
 from lark import Lark
-from .s1sast import *
+from lib.s1sast import *
 
 grammar = """
 start: q_prop
@@ -30,7 +30,7 @@ q_prop: forall | exists | a_prop | "!" "("q_prop")" -> not | and | or | impl
 
 parser = Lark(grammar)
 
-toy_prog = "exists x.x=y"
+toy_prog = "forall S . exists y . forall x . x in S & y in S -> y <= x"
 
 def pretty_print(ast, tab_count):
     if hasattr(ast, "children"):
@@ -47,7 +47,7 @@ def construct_typed_ast(ast):
         case 'forall':
             var = construct_typed_ast(ast.children[0])
             expr = construct_typed_ast(ast.children[1])
-            return QuantifiedExpr(var,expr, var.get_order(), "forall")
+            return Negate(QuantifiedExpr(var,Negate(expr), var.get_order(), "exists"))
         case 'exists':
             var = construct_typed_ast(ast.children[0])
             expr = construct_typed_ast(ast.children[1])

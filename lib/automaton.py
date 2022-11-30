@@ -1,7 +1,7 @@
 import buddy
 import spot
 
-from .s1sast import *
+from lib.s1sast import *
 import lib.grammar as grammar
 
 def construct_automaton(tree, vars,bound_vars,bind_types, ap_bdds = None, var_map = None, ap_nums = None, bdict = None, base=False):
