@@ -1,1 +1,1 @@
-forall S . exists y . y in S & forall x . x in S -> y <= x
+forall S . exists y . forall x . (x in S & y in S) -> y <= x

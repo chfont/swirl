@@ -19,7 +19,8 @@ a_prop: term "=" term -> eq
         | "!" "("a_prop")" -> not
 and: q_prop "&" q_prop -> and
 or: q_prop "|" q_prop -> or
-impl: a_prop "->" a_prop -> impl
+impl_prop: a_prop | and | or | "!" "(" impl_prop ")" 
+impl: impl_prop "->" impl_prop -> impl| "(" impl_prop ")" "->" impl_prop -> impl
 forall: "forall" fvar "." q_prop | "forall" svar "." q_prop
 exists: "exists" svar "." q_prop | "exists" fvar "." q_prop
 q_prop: forall | exists | a_prop | "!" "("q_prop")" -> not | and | or | impl
@@ -68,6 +69,8 @@ def construct_typed_ast(ast):
             left = construct_typed_ast(ast.children[0])
             right = construct_typed_ast(ast.children[1])
             return Or(Negate(left),right) 
+        case 'impl_prop':
+            return construct_typed_ast(ast.children[0])
         case 'zero':
             return Zero()
         case 'in':
