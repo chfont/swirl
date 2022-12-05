@@ -5,7 +5,8 @@ from lib.s1sast import *
 import lib.grammar as grammar
 
 def construct_automaton(tree, vars,bound_vars,bind_types, ap_bdds = None, var_map = None, ap_nums = None, bdict = None, base=False):
-    if bdict is None:
+    """Main construction function"""
+    if bdict is None: # initially true, this function is recursive
         bdict = spot.make_bdd_dict()
     aut = spot.make_twa_graph(bdict)
     
@@ -20,7 +21,7 @@ def construct_automaton(tree, vars,bound_vars,bind_types, ap_bdds = None, var_ma
         ap_bdds = [buddy.bdd_ithvar(ap_nums[x]) for x in var_map]
         var_map = dict(zip(vars, ap_bdds))
 
-    def project(bdd):
+    def project(bdd): #Shorthand helper function
         return project_if_bound(bound_vars, bdd, var_map, bind_types)
     if isinstance(tree, Eq):
         if isinstance(tree.left, Zero):
@@ -266,7 +267,7 @@ def construct_automaton(tree, vars,bound_vars,bind_types, ap_bdds = None, var_ma
 
         
 
-    # aut has been setup
+    # aut has been setup, need to add base automata 
     if base:
         principle_automata = [build_principle_automaton(var_map[x],bdict) for x in var_map if is_first_order(x) and not x in bound_vars]
         for a in principle_automata:
@@ -278,6 +279,7 @@ def is_first_order(x):
 
 # Automaton that says x in O*10^w
 def build_principle_automaton(bdd, bdict): 
+    """Build an automaton to say bdd must match 0*10^w"""
     aut = spot.make_twa_graph(bdict)
     aut.new_states(2)
     aut.set_init_state(0)
@@ -290,6 +292,7 @@ def build_principle_automaton(bdd, bdict):
     return aut
 
 def ast_to_automaton(canonical_tree):
+    """Helper function to take a canonical tree, extract variables, and construct the automaton"""
     vars = list(grammar.extract_vars(canonical_tree))
     vars.sort()
     bound_vars = [x for x in vars if is_bound(x,canonical_tree)]
@@ -297,6 +300,7 @@ def ast_to_automaton(canonical_tree):
     return construct_automaton(canonical_tree, vars,bound_vars,bind_types,base=True)
 
 def get_bind_type(var, expr): # assume var is bound, is it universal or existential?
+    """If var is bound, return how it is bound, as a string"""
     match expr:
         case QuantifiedExpr():
             if expr.bound_var.var_name == var:
@@ -321,6 +325,7 @@ def get_bind_type(var, expr): # assume var is bound, is it universal or existent
             return None
 
 def is_bound(var, expr):
+    """Check if a variable is bound within an expression"""
     match expr:
         case QuantifiedExpr():
             if expr.bound_var.var_name == var:
@@ -337,6 +342,7 @@ def is_bound(var, expr):
             return False
 
 def project_if_bound(bound_vars, bdd, var_map, bind_types):
+    """Project away all bound variables from the automaton"""
     res = bdd 
     for v in bound_vars:
         if bind_types[v] == 'exists':

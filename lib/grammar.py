@@ -34,6 +34,7 @@ parser = Lark(grammar)
 toy_prog = "forall S . exists y . forall x . x in S & y in S -> y <= x"
 
 def pretty_print(ast, tab_count):
+    """Function for pretty printing the Lark-produced AST, for debugging"""
     if hasattr(ast, "children"):
         print("  "*tab_count + ast.data)
         for child in ast.children:
@@ -42,6 +43,7 @@ def pretty_print(ast, tab_count):
         print("  "*tab_count + ast)
 
 def construct_typed_ast(ast):
+    """Function to convert Lark AST into a more strongly-typed AST. see s1sast.py for details"""
     match ast.data:
         case 'q_prop':
             return construct_typed_ast(ast.children[0]) #one child
@@ -110,6 +112,7 @@ def construct_typed_ast(ast):
             print(ast)
 
 def extract_vars(tree):
+    """Function to extract set of variables from a Swirl AST"""
     vars = set()
     match tree:
         case QuantifiedExpr():
@@ -138,6 +141,7 @@ def extract_vars(tree):
         case Successor(sub_term=sub):
             return vars.union(extract_vars(sub))
 def canonicalize(tree):
+    """Function to simplify AST, to decrease work needed to construct automata"""
     if isinstance(tree, Eq):
         if(isinstance(tree.left, Successor) and isinstance(tree.right,Successor)):
             return canonicalize(Eq(tree.left.sub_term,tree.right.sub_term))
@@ -166,6 +170,7 @@ def canonicalize(tree):
         return tree
 
 def s1s_parse(program):
+    """Helper function to take a program as a string, and produce a canonicalized tree"""
     return canonicalize(construct_typed_ast(parser.parse(program).children[0]))
 
 if __name__ == "__main__":
